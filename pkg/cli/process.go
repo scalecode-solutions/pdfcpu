@@ -122,6 +122,9 @@ func processForm(cmd *Command) (out []string, err error) {
 
 	case model.MULTIFILLFORMFIELDS:
 		return MultiFillFormFields(cmd)
+
+	case model.FLATTENFORMFIELDS:
+		return FlattenFormFields(cmd)
 	}
 
 	return nil, nil
@@ -161,6 +164,9 @@ func processPageAnnotations(cmd *Command) (out []string, err error) {
 	switch cmd.Mode {
 
 	case model.LISTANNOTATIONS:
+		if cmd.BoolVal1 {
+			return ListAnnotationsJSON(cmd)
+		}
 		out, err = ListAnnotations(cmd)
 
 	case model.REMOVEANNOTATIONS:
@@ -302,6 +308,22 @@ func processSignatures(cmd *Command) (out []string, err error) {
 
 	case model.VALIDATESIGNATURES:
 		return ValidateSignatures(cmd)
+	}
+
+	return nil, nil
+}
+
+func processOpenAction(cmd *Command) (out []string, err error) {
+	switch cmd.Mode {
+
+	case model.LISTOPENACTION:
+		return ListOpenAction(cmd)
+
+	case model.SETOPENACTION:
+		return SetOpenAction(cmd)
+
+	case model.RESETOPENACTION:
+		return ResetOpenAction(cmd)
 	}
 
 	return nil, nil

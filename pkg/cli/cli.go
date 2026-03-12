@@ -460,3 +460,32 @@ func InspectCertificates(cmd *Command) ([]string, error) {
 func ValidateSignatures(cmd *Command) ([]string, error) {
 	return api.ValidateSignaturesFile(*cmd.InFile, cmd.BoolVal1, cmd.BoolVal2, cmd.Conf)
 }
+
+// FlattenFormFields flattens form fields into page content.
+func FlattenFormFields(cmd *Command) ([]string, error) {
+	return nil, api.FlattenFormFieldsFile(*cmd.InFile, *cmd.OutFile, cmd.StringVals, cmd.Conf)
+}
+
+// ListOpenAction returns inFile's open action.
+func ListOpenAction(cmd *Command) ([]string, error) {
+	return api.ListOpenActionFile(*cmd.InFile, cmd.Conf)
+}
+
+// SetOpenAction sets inFile's open action.
+func SetOpenAction(cmd *Command) ([]string, error) {
+	return nil, api.SetOpenActionFile(*cmd.InFile, *cmd.OutFile, cmd.StringVal, cmd.Conf)
+}
+
+// ResetOpenAction removes inFile's open action.
+func ResetOpenAction(cmd *Command) ([]string, error) {
+	return nil, api.ResetOpenActionFile(*cmd.InFile, *cmd.OutFile, cmd.Conf)
+}
+
+// ListAnnotationsJSON returns inFile's page annotations as JSON.
+func ListAnnotationsJSON(cmd *Command) ([]string, error) {
+	b, err := api.AnnotationsJSONFile(*cmd.InFile, cmd.PageSelection, cmd.Conf)
+	if err != nil {
+		return nil, err
+	}
+	return []string{string(b)}, nil
+}

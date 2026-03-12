@@ -118,6 +118,19 @@ func initFormCmdMap() commandMap {
 		"export":    {processExportFormCommand, nil, "", ""},
 		"fill":      {processFillFormCommand, nil, "", ""},
 		"multifill": {processMultiFillFormCommand, nil, "", ""},
+		"flatten":   {processFlattenFormCommand, nil, "", ""},
+	} {
+		m.register(k, v)
+	}
+	return m
+}
+
+func initOpenActionCmdMap() commandMap {
+	m := newCommandMap()
+	for k, v := range map[string]command{
+		"list":  {processListOpenActionCommand, nil, "", ""},
+		"set":   {processSetOpenActionCommand, nil, "", ""},
+		"reset": {processResetOpenActionCommand, nil, "", ""},
 	} {
 		m.register(k, v)
 	}
@@ -275,6 +288,7 @@ func initCommandMap() {
 	configCmdMap := initConfigCmdMap()
 	fontsCmdMap := initFontsCmdMap()
 	formCmdMap := initFormCmdMap()
+	openActionCmdMap := initOpenActionCmdMap()
 	imagesCmdMap := initImagesCmdMap()
 	keywordsCmdMap := initKeywordsCmdMap()
 	pagesCmdMap := initPagesCmdMap()
@@ -310,6 +324,7 @@ func initCommandMap() {
 		"extract":       {processExtractCommand, nil, usageExtract, usageLongExtract},
 		"fonts":         {nil, fontsCmdMap, usageFonts, usageLongFonts},
 		"form":          {nil, formCmdMap, usageForm, usageLongForm},
+		"openaction":    {nil, openActionCmdMap, usageOpenAction, usageLongOpenAction},
 		"grid":          {processGridCommand, nil, usageGrid, usageLongGrid},
 		"help":          {printHelp, nil, "", ""},
 		"images":        {nil, imagesCmdMap, usageImages, usageLongImages},

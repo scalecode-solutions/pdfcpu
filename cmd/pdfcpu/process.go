@@ -2013,6 +2013,12 @@ func processListAnnotationsCommand(conf *model.Configuration) {
 		os.Exit(1)
 	}
 
+	if json {
+		log.SetCLILogger(nil)
+		process(cli.ListAnnotationsJSONCommand(inFile, selectedPages, conf))
+		return
+	}
+
 	process(cli.ListAnnotationsCommand(inFile, selectedPages, conf))
 }
 
@@ -2994,4 +3000,85 @@ func processValidateSignaturesCommand(conf *model.Configuration) {
 	}
 
 	process(cli.ValidateSignaturesCommand(inFile, all, full, conf))
+}
+
+func processFlattenFormCommand(conf *model.Configuration) {
+	if len(flag.Args()) == 0 || selectedPages != "" {
+		fmt.Fprintf(os.Stderr, "usage: %s\n\n", usageFormFlatten)
+		os.Exit(1)
+	}
+
+	inFile := flag.Arg(0)
+	if conf.CheckFileNameExt {
+		ensurePDFExtension(inFile)
+	}
+
+	var fieldIDs []string
+	outFile := inFile
+
+	if len(flag.Args()) > 1 {
+		s := flag.Arg(1)
+		if hasPDFExtension(s) {
+			outFile = s
+		} else {
+			fieldIDs = append(fieldIDs, s)
+		}
+	}
+
+	if len(flag.Args()) > 2 {
+		for i := 2; i < len(flag.Args()); i++ {
+			fieldIDs = append(fieldIDs, flag.Arg(i))
+		}
+	}
+
+	process(cli.FlattenFormFieldsCommand(inFile, outFile, fieldIDs, conf))
+}
+
+func processListOpenActionCommand(conf *model.Configuration) {
+	if len(flag.Args()) != 1 || selectedPages != "" {
+		fmt.Fprintf(os.Stderr, "usage: %s\n", usageOpenActionList)
+		os.Exit(1)
+	}
+
+	inFile := flag.Arg(0)
+	if conf.CheckFileNameExt {
+		ensurePDFExtension(inFile)
+	}
+	process(cli.ListOpenActionCommand(inFile, conf))
+}
+
+func processSetOpenActionCommand(conf *model.Configuration) {
+	if len(flag.Args()) != 2 || selectedPages != "" {
+		fmt.Fprintf(os.Stderr, "usage: %s\n", usageOpenActionSet)
+		os.Exit(1)
+	}
+
+	inFile := flag.Arg(0)
+	if conf.CheckFileNameExt {
+		ensurePDFExtension(inFile)
+	}
+
+	dest := flag.Arg(1)
+
+	process(cli.SetOpenActionCommand(inFile, "", dest, conf))
+}
+
+func processResetOpenActionCommand(conf *model.Configuration) {
+	if len(flag.Args()) < 1 || len(flag.Args()) > 2 || selectedPages != "" {
+		fmt.Fprintf(os.Stderr, "usage: %s\n", usageOpenActionReset)
+		os.Exit(1)
+	}
+
+	inFile := flag.Arg(0)
+	if conf.CheckFileNameExt {
+		ensurePDFExtension(inFile)
+	}
+
+	outFile := inFile
+	if len(flag.Args()) == 2 {
+		outFile = flag.Arg(1)
+		ensurePDFExtension(outFile)
+	}
+
+	process(cli.ResetOpenActionCommand(inFile, outFile, conf))
 }

@@ -122,6 +122,10 @@ var cmdMap = map[model.CommandMode]func(cmd *Command) ([]string, error){
 	model.EXPORTFORMFIELDS:        processForm,
 	model.FILLFORMFIELDS:          processForm,
 	model.MULTIFILLFORMFIELDS:     processForm,
+	model.FLATTENFORMFIELDS:       processForm,
+	model.LISTOPENACTION:          processOpenAction,
+	model.SETOPENACTION:           processOpenAction,
+	model.RESETOPENACTION:         processOpenAction,
 	model.RESIZE:                  Resize,
 	model.POSTER:                  Poster,
 	model.NDOWN:                   NDown,
@@ -1299,4 +1303,71 @@ func ValidateSignaturesCommand(inFile string, all, full bool, conf *model.Config
 		BoolVal1: all,
 		BoolVal2: full,
 		Conf:     conf}
+}
+
+// FlattenFormFieldsCommand creates a new command to flatten PDF form fields into page content.
+func FlattenFormFieldsCommand(inFile, outFile string, fieldIDs []string, conf *model.Configuration) *Command {
+	if conf == nil {
+		conf = model.NewDefaultConfiguration()
+	}
+	conf.Cmd = model.FLATTENFORMFIELDS
+	return &Command{
+		Mode:       model.FLATTENFORMFIELDS,
+		InFile:     &inFile,
+		OutFile:    &outFile,
+		StringVals: fieldIDs,
+		Conf:       conf}
+}
+
+// ListOpenActionCommand creates a new command to list the document open action.
+func ListOpenActionCommand(inFile string, conf *model.Configuration) *Command {
+	if conf == nil {
+		conf = model.NewDefaultConfiguration()
+	}
+	conf.Cmd = model.LISTOPENACTION
+	return &Command{
+		Mode:   model.LISTOPENACTION,
+		InFile: &inFile,
+		Conf:   conf}
+}
+
+// SetOpenActionCommand creates a new command to set the document open action.
+func SetOpenActionCommand(inFile, outFile, dest string, conf *model.Configuration) *Command {
+	if conf == nil {
+		conf = model.NewDefaultConfiguration()
+	}
+	conf.Cmd = model.SETOPENACTION
+	return &Command{
+		Mode:      model.SETOPENACTION,
+		InFile:    &inFile,
+		OutFile:   &outFile,
+		StringVal: dest,
+		Conf:      conf}
+}
+
+// ResetOpenActionCommand creates a new command to reset the document open action.
+func ResetOpenActionCommand(inFile, outFile string, conf *model.Configuration) *Command {
+	if conf == nil {
+		conf = model.NewDefaultConfiguration()
+	}
+	conf.Cmd = model.RESETOPENACTION
+	return &Command{
+		Mode:    model.RESETOPENACTION,
+		InFile:  &inFile,
+		OutFile: &outFile,
+		Conf:    conf}
+}
+
+// ListAnnotationsJSONCommand creates a new command to list page annotations as JSON.
+func ListAnnotationsJSONCommand(inFile string, pageSelection []string, conf *model.Configuration) *Command {
+	if conf == nil {
+		conf = model.NewDefaultConfiguration()
+	}
+	conf.Cmd = model.LISTANNOTATIONS
+	return &Command{
+		Mode:          model.LISTANNOTATIONS,
+		InFile:        &inFile,
+		PageSelection: pageSelection,
+		BoolVal1:      true, // JSON mode
+		Conf:          conf}
 }

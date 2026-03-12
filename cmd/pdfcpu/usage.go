@@ -42,7 +42,7 @@ The commands are:
    encrypt       set password protection		
    extract       extract images, fonts, content, pages or metadata
    fonts         install, list supported fonts, create cheat sheets
-   form          list, remove fields, lock, unlock, reset, export, fill form via JSON or CSV
+   form          list, remove fields, lock, unlock, reset, export, fill, flatten form via JSON or CSV
    grid          rearrange pages or images for enhanced browsing experience
    images        list, extract, update images
    import        import/convert images to PDF
@@ -51,6 +51,7 @@ The commands are:
    merge         concatenate PDFs
    ndown         cut selected pages into n pages symmetrically
    nup           rearrange pages or images for reduced number of pages
+   openaction    list, set, reset open action for opened document
    optimize      optimize PDF by getting rid of redundant page resources
    pagelayout    list, set, reset page layout for opened document
    pagemode      list, set, reset page mode for opened document
@@ -1105,7 +1106,7 @@ Examples:
      
 ` + usageBoxDescription
 
-	usageAnnotsList   = "pdfcpu annotations list   [-p(ages) selectedPages] -- inFile"
+	usageAnnotsList   = "pdfcpu annotations list   [-p(ages) selectedPages] [-j(son)] -- inFile"
 	usageAnnotsRemove = "pdfcpu annotations remove [-p(ages) selectedPages] -- inFile [outFile] [objNr|annotId|annotType]..."
 
 	usageAnnots = "usage: " + usageAnnotsList +
@@ -1114,6 +1115,7 @@ Examples:
 	usageLongAnnots = `Manage annotations.
    
       pages ... Please refer to "pdfcpu selectedpages"
+       json ... produce JSON output
      inFile ... input PDF file
       objNr ... obj# from "pdfcpu annotations list"
     annotId ... id from "pdfcpu annotations list"
@@ -1145,6 +1147,9 @@ Examples:
 
       Remove annotations by type, id and obj# and write to out.pdf:
          pdfcpu annot remove in.pdf out.pdf Link 30 Text someId
+
+      List all annotations as JSON:
+         pdfcpu annot list -json in.pdf
       `
 
 	usageImagesList    = "pdfcpu images list    [-p(ages) selectedPages] -- inFile..."
@@ -1232,6 +1237,7 @@ For more info on json syntax & samples please refer to :
 	usageFormExport       = "pdfcpu form export inFile [outFileJSON]"
 	usageFormFill         = "pdfcpu form fill inFile inFileJSON [outFile]"
 	usageFormMultiFill    = "pdfcpu form multifill [-m(ode) single|merge] -- inFile inFileData outDir [outName]"
+	usageFormFlatten      = "pdfcpu form flatten inFile [outFile] [fieldID|fieldName]..."
 
 	usageForm = "usage: " + usageFormListFields +
 		"\n       " + usageFormRemoveFields +
@@ -1239,6 +1245,7 @@ For more info on json syntax & samples please refer to :
 		"\n       " + usageFormUnlock +
 		"\n       " + usageFormReset +
 		"\n       " + usageFormExport +
+		"\n       " + usageFormFlatten +
 		"\n\n       " + usageFormFill +
 		"\n       " + usageFormMultiFill + generalFlags
 
@@ -1322,7 +1329,13 @@ Supported usecases:
          c) "pdfcpu form multifill -m merge in.pdf in.csv outDir" creates a single output PDF in outDir.
 
 
-   (For syntax and details please refer to pdfcpu/pkg/api/test/form_test.go)`
+   (For syntax and details please refer to pdfcpu/pkg/api/test/form_test.go)
+
+  10) Flatten form fields (bake appearances into page content):
+         "pdfcpu form flatten in.pdf" flattens all form fields of in.pdf, making them non-interactive.
+         "pdfcpu form flatten in.pdf out.pdf" writes the flattened result to out.pdf.
+         "pdfcpu form flatten in.pdf firstName lastName" flattens only the named fields.
+         You may supply a mixed list of field ids and field names.`
 
 	usageResize     = "usage: pdfcpu resize [-p(ages) selectedPages] -- description inFile [outFile]" + generalFlags
 	usageLongResize = `Resize existing pages.
@@ -1556,6 +1569,44 @@ description ... scalefactor, dimensions, formsize, enforce, border, bgcolor
         reset page layout:
            pdfcpu pagelayout reset test.pdf
 `
+
+	usageOpenActionList  = "pdfcpu openaction list  inFile"
+	usageOpenActionSet   = "pdfcpu openaction set   inFile destination"
+	usageOpenActionReset = "pdfcpu openaction reset inFile [outFile]"
+
+	usageOpenAction = "usage: " + usageOpenActionList +
+		"\n       " + usageOpenActionSet +
+		"\n       " + usageOpenActionReset + generalFlags
+
+	usageLongOpenAction = `Manage the open action which shall be performed when the document is opened:
+
+    inFile      ... input PDF file
+    outFile     ... output PDF file (default: inFile)
+    destination ... pageNr:fit[:param...] where fit is one of:
+
+                Fit                   ... Fit page in window
+                FitH[:top]            ... Fit page width, optional top coordinate
+                FitV[:left]           ... Fit page height, optional left coordinate
+                FitB                  ... Fit page bounding box
+                FitBH[:top]           ... Fit bounding box width
+                FitBV[:left]          ... Fit bounding box height
+                XYZ[:left:top:zoom]   ... Specific position and zoom
+
+    Eg. list open action:
+           pdfcpu openaction list test.pdf
+
+        set open action to fit page 1:
+           pdfcpu openaction set test.pdf 1:Fit
+
+        set open action to page 3, fit width at top=100:
+           pdfcpu openaction set test.pdf 3:FitH:100
+
+        set open action to page 1 at specific position with 1.5x zoom:
+           pdfcpu openaction set test.pdf 1:XYZ:0:0:1.5
+
+        reset (remove) open action:
+           pdfcpu openaction reset test.pdf
+    `
 
 	usagePageModeList  = "pdfcpu pagemode list  inFile"
 	usagePageModeSet   = "pdfcpu pagemode set   inFile value"
