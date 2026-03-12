@@ -984,6 +984,10 @@ func MergeXRefTables(fName string, ctxSrc, ctxDest *model.Context, zip, dividerP
 	// Merge all IntSets containing redundant object numbers.
 	mergeDuplicateObjNumberIntSets(ctxSrc, ctxDest)
 
+	// Release source context references to reduce peak memory during multi-file merges.
+	ctxSrc.Table = nil
+	ctxSrc.Read = nil
+
 	if log.InfoEnabled() {
 		log.Info.Printf("Dest XRefTable after merge:\n%s\n", ctxDest)
 	}

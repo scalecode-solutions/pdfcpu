@@ -8,14 +8,9 @@ require (
 	github.com/hhrutter/lzw v1.0.0
 	github.com/hhrutter/pkcs7 v0.2.0
 	github.com/hhrutter/tiff v1.0.2
-	github.com/mattn/go-runewidth v0.0.19
+	github.com/scalecode-solutions/runeseg v1.0.4
 	golang.org/x/crypto v0.47.0
 	golang.org/x/image v0.35.0
 	golang.org/x/text v0.33.0
 	gopkg.in/yaml.v3 v3.0.1
-)
-
-require (
-	github.com/clipperhouse/stringish v0.1.1 // indirect
-	github.com/clipperhouse/uax29/v2 v2.4.0 // indirect
 )

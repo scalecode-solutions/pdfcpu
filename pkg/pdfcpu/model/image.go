@@ -700,7 +700,10 @@ func createImageBuf(xRefTable *XRefTable, img image.Image, imgA image.Image, for
 		return handleCMYKImage(im)
 
 	default:
-		return nil, nil, 0, "", fmt.Errorf("pdfcpu: unsupported image type: %T", im)
+		// Fallback: convert any image.Image to RGBA (handles non-standard TIFF types, etc.)
+		rgba := image.NewRGBA(img.Bounds())
+		draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
+		return handleRGBImage(xRefTable, rgba)
 	}
 }
 

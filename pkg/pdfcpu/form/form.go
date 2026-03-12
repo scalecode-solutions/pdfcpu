@@ -24,13 +24,13 @@ import (
 
 	"errors"
 
-	"github.com/mattn/go-runewidth"
 	"github.com/pdfcpu/pdfcpu/pkg/log"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/draw"
 	pdffont "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/font"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/primitives"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
+	"github.com/scalecode-solutions/runeseg"
 )
 
 // FieldType represents a form field type.
@@ -370,7 +370,7 @@ func collectRadioButtonGroup(xRefTable *model.XRefTable, d types.Dict, f *Field,
 					}
 				}
 			}
-			if w := runewidth.StringWidth(v); w > fm.valMax {
+			if w := runeseg.StringWidth(v); w > fm.valMax {
 				fm.valMax = w
 			}
 			fm.val = true
@@ -398,7 +398,7 @@ func collectBtn(xRefTable *model.XRefTable, d types.Dict, f *Field, fm *FieldMet
 	}
 
 	if dv != "Off" {
-		if w := runewidth.StringWidth(dv); w > fm.defMax {
+		if w := runeseg.StringWidth(dv); w > fm.defMax {
 			fm.defMax = w
 		}
 		fm.def = true
@@ -432,7 +432,7 @@ func collectComboBox(d types.Dict, f *Field, fm *FieldMeta) error {
 		if err != nil {
 			return err
 		}
-		if w := runewidth.StringWidth(v); w > fm.valMax {
+		if w := runeseg.StringWidth(v); w > fm.valMax {
 			fm.valMax = w
 		}
 		fm.val = true
@@ -443,7 +443,7 @@ func collectComboBox(d types.Dict, f *Field, fm *FieldMeta) error {
 		if err != nil {
 			return err
 		}
-		if w := runewidth.StringWidth(dv); w > fm.defMax {
+		if w := runeseg.StringWidth(dv); w > fm.defMax {
 			fm.defMax = w
 		}
 		fm.def = true
@@ -460,7 +460,7 @@ func collectListBox(xRefTable *model.XRefTable, multi bool, d types.Dict, f *Fie
 			if err != nil {
 				return err
 			}
-			if w := runewidth.StringWidth(v); w > fm.valMax {
+			if w := runeseg.StringWidth(v); w > fm.valMax {
 				fm.valMax = w
 			}
 			fm.val = true
@@ -471,7 +471,7 @@ func collectListBox(xRefTable *model.XRefTable, multi bool, d types.Dict, f *Fie
 			if err != nil {
 				return err
 			}
-			if w := runewidth.StringWidth(dv); w > fm.defMax {
+			if w := runeseg.StringWidth(dv); w > fm.defMax {
 				fm.defMax = w
 			}
 			fm.def = true
@@ -484,7 +484,7 @@ func collectListBox(xRefTable *model.XRefTable, multi bool, d types.Dict, f *Fie
 		}
 		if len(vv) > 0 {
 			v := strings.Join(vv, ",")
-			if w := runewidth.StringWidth(v); w > fm.valMax {
+			if w := runeseg.StringWidth(v); w > fm.valMax {
 				fm.valMax = w
 			}
 			fm.val = true
@@ -496,7 +496,7 @@ func collectListBox(xRefTable *model.XRefTable, multi bool, d types.Dict, f *Fie
 		}
 		if len(vv) > 0 {
 			dv := strings.Join(vv, ",")
-			if w := runewidth.StringWidth(dv); w > fm.defMax {
+			if w := runeseg.StringWidth(dv); w > fm.defMax {
 				fm.defMax = w
 			}
 			fm.def = true
@@ -606,7 +606,7 @@ func collectTx(xRefTable *model.XRefTable, d types.Dict, f *Field, fm *FieldMeta
 	}
 	if v != "" {
 		v = cleanTextForListCmd(v, maxWidth)
-		if w := runewidth.StringWidth(v); w > fm.valMax {
+		if w := runeseg.StringWidth(v); w > fm.valMax {
 			fm.valMax = w
 		}
 		fm.val = true
@@ -619,7 +619,7 @@ func collectTx(xRefTable *model.XRefTable, d types.Dict, f *Field, fm *FieldMeta
 	}
 	if dv != "" {
 		dv = cleanTextForListCmd(dv, maxWidth)
-		if w := runewidth.StringWidth(dv); w > fm.defMax {
+		if w := runeseg.StringWidth(dv); w > fm.defMax {
 			fm.defMax = w
 		}
 		fm.def = true
@@ -681,12 +681,12 @@ func collectPageField(
 	f := Field{Pages: []int{pageNr}}
 
 	f.ID = fi.id
-	if w := runewidth.StringWidth(fi.id); w > fm.idMax {
+	if w := runeseg.StringWidth(fi.id); w > fm.idMax {
 		fm.idMax = w
 	}
 
 	f.Name = fi.name
-	if w := runewidth.StringWidth(fi.name); w > fm.nameMax {
+	if w := runeseg.StringWidth(fi.name); w > fm.nameMax {
 		fm.nameMax = w
 	}
 
@@ -715,7 +715,7 @@ func collectPageField(
 			s = *s1
 		}
 		altName := cleanTextForListCmd(s, maxWidth)
-		if w := runewidth.StringWidth(altName); w > fm.altNameMax {
+		if w := runeseg.StringWidth(altName); w > fm.altNameMax {
 			fm.altNameMax = w
 		}
 		fm.altName = true
@@ -917,21 +917,21 @@ func renderMultiPageFields(m map[string][]Field, fm *FieldMeta) ([]string, error
 
 			t := f.Typ.String()
 
-			pageFill := strings.Repeat(" ", fm.pageMax-runewidth.StringWidth(f.pageString()))
-			idFill := strings.Repeat(" ", fm.idMax-runewidth.StringWidth(f.ID))
-			nameFill := strings.Repeat(" ", fm.nameMax-runewidth.StringWidth(f.Name))
+			pageFill := strings.Repeat(" ", fm.pageMax-runeseg.StringWidth(f.pageString()))
+			idFill := strings.Repeat(" ", fm.idMax-runeseg.StringWidth(f.ID))
+			nameFill := strings.Repeat(" ", fm.nameMax-runeseg.StringWidth(f.Name))
 			s := fmt.Sprintf("%s%s %s %-9s %s %s%s %s %s%s ", p, pageFill, l, t, draw.VBar, f.ID, idFill, draw.VBar, f.Name, nameFill)
 			p = strings.Repeat(" ", len(p))
 			if fm.altName {
-				altNameFill := strings.Repeat(" ", fm.altNameMax-runewidth.StringWidth(f.AltName))
+				altNameFill := strings.Repeat(" ", fm.altNameMax-runeseg.StringWidth(f.AltName))
 				s += fmt.Sprintf("%s %s%s ", draw.VBar, f.AltName, altNameFill)
 			}
 			if fm.def {
-				dvFill := strings.Repeat(" ", fm.defMax-runewidth.StringWidth(f.Dv))
+				dvFill := strings.Repeat(" ", fm.defMax-runeseg.StringWidth(f.Dv))
 				s += fmt.Sprintf("%s %s%s ", draw.VBar, f.Dv, dvFill)
 			}
 			if fm.val {
-				vFill := strings.Repeat(" ", fm.valMax-runewidth.StringWidth(f.V))
+				vFill := strings.Repeat(" ", fm.valMax-runeseg.StringWidth(f.V))
 				s += fmt.Sprintf("%s %s%s ", draw.VBar, f.V, vFill)
 			}
 			if fm.opt {
@@ -994,20 +994,20 @@ func renderFields(ctx *model.Context, fs []Field, fm *FieldMeta) ([]string, erro
 
 		t := f.Typ.String()
 
-		pageFill := strings.Repeat(" ", fm.pageMax-runewidth.StringWidth(f.pageString()))
-		idFill := strings.Repeat(" ", fm.idMax-runewidth.StringWidth(f.ID))
-		nameFill := strings.Repeat(" ", fm.nameMax-runewidth.StringWidth(f.Name))
+		pageFill := strings.Repeat(" ", fm.pageMax-runeseg.StringWidth(f.pageString()))
+		idFill := strings.Repeat(" ", fm.idMax-runeseg.StringWidth(f.ID))
+		nameFill := strings.Repeat(" ", fm.nameMax-runeseg.StringWidth(f.Name))
 		s := fmt.Sprintf("%s%s %s %-9s %s %s%s %s %s%s ", p, pageFill, l, t, draw.VBar, f.ID, idFill, draw.VBar, f.Name, nameFill)
 		if fm.altName {
-			altNameFill := strings.Repeat(" ", fm.altNameMax-runewidth.StringWidth(f.AltName))
+			altNameFill := strings.Repeat(" ", fm.altNameMax-runeseg.StringWidth(f.AltName))
 			s += fmt.Sprintf("%s %s%s ", draw.VBar, f.AltName, altNameFill)
 		}
 		if fm.def {
-			dvFill := strings.Repeat(" ", fm.defMax-runewidth.StringWidth(f.Dv))
+			dvFill := strings.Repeat(" ", fm.defMax-runeseg.StringWidth(f.Dv))
 			s += fmt.Sprintf("%s %s%s ", draw.VBar, f.Dv, dvFill)
 		}
 		if fm.val {
-			vFill := strings.Repeat(" ", fm.valMax-runewidth.StringWidth(f.V))
+			vFill := strings.Repeat(" ", fm.valMax-runeseg.StringWidth(f.V))
 			s += fmt.Sprintf("%s %s%s ", draw.VBar, f.V, vFill)
 		}
 		if fm.opt {
@@ -1343,6 +1343,214 @@ func RemoveFormFields(ctx *model.Context, fieldIDsOrNames []string) (bool, error
 	// In these cases you can order the viewer to provide form field appearance streams.
 	if ctx.NeedAppearances {
 		xRefTable.Form["NeedAppearances"] = types.Boolean(true)
+	}
+
+	return ok, nil
+}
+
+// flattenWidgetAnnotation bakes a widget annotation's appearance stream into the page content
+// and adds the appearance XObject to the page's resources.
+func flattenWidgetAnnotation(ctx *model.Context, pageDict types.Dict, d types.Dict) error {
+	xRefTable := ctx.XRefTable
+
+	// Get appearance dict.
+	o, found := d.Find("AP")
+	if !found {
+		return nil
+	}
+
+	apDict, err := xRefTable.DereferenceDict(o)
+	if err != nil || apDict == nil {
+		return err
+	}
+
+	// Get normal appearance stream reference.
+	nObj, found := apDict.Find("N")
+	if !found {
+		return nil
+	}
+
+	// For buttons with appearance states (checkboxes, radio buttons),
+	// select the correct sub-appearance based on AS entry.
+	var apRef types.Object
+	switch n := nObj.(type) {
+	case types.IndirectRef:
+		apRef = n
+	case types.Dict:
+		as := d.NameEntry("AS")
+		if as == nil || *as == "Off" {
+			return nil
+		}
+		sub, ok := n.Find(*as)
+		if !ok {
+			return nil
+		}
+		apRef = sub
+	default:
+		return nil
+	}
+
+	apIndRef, ok := apRef.(types.IndirectRef)
+	if !ok {
+		return nil
+	}
+
+	// Get widget rectangle.
+	rectArr := d.ArrayEntry("Rect")
+	if rectArr == nil || len(rectArr) != 4 {
+		return nil
+	}
+
+	rect, err := xRefTable.RectForArray(rectArr)
+	if err != nil {
+		return err
+	}
+
+	// Get or create page Resources dict.
+	resObj, found := pageDict.Find("Resources")
+	var resDict types.Dict
+	if found {
+		resDict, err = xRefTable.DereferenceDict(resObj)
+		if err != nil {
+			return err
+		}
+	}
+	if resDict == nil {
+		resDict = types.Dict{}
+		pageDict["Resources"] = resDict
+	}
+
+	// Get or create XObject sub-dict in Resources.
+	var xoDict types.Dict
+	xoObj, found := resDict.Find("XObject")
+	if found {
+		xoDict, err = xRefTable.DereferenceDict(xoObj)
+		if err != nil {
+			return err
+		}
+	}
+	if xoDict == nil {
+		xoDict = types.Dict{}
+		resDict["XObject"] = xoDict
+	}
+
+	// Find a unique XObject name.
+	xoName := "Fm0"
+	for i := 0; i < 10000000; i++ {
+		xoName = "Fm" + strconv.Itoa(i)
+		if _, found := xoDict.Find(xoName); !found {
+			break
+		}
+	}
+	xoDict[xoName] = apIndRef
+
+	// Build content stream command to render the appearance at the widget's position.
+	w := rect.UR.X - rect.LL.X
+	h := rect.UR.Y - rect.LL.Y
+	content := fmt.Sprintf("q 1 0 0 1 %.5f %.5f cm %.5f 0 0 %.5f 0 0 cm /%s Do Q ",
+		rect.LL.X, rect.LL.Y, w, h, xoName)
+
+	return xRefTable.AppendContent(pageDict, []byte(content))
+}
+
+// FlattenFormFields renders form field values into page content and removes all form field objects.
+func FlattenFormFields(ctx *model.Context, fieldIDsOrNames []string) (bool, error) {
+	xRefTable := ctx.XRefTable
+
+	fields, err := Fields(xRefTable)
+	if err != nil {
+		return false, err
+	}
+
+	indRefs, err := annotIndRefsForFields(xRefTable, fieldIDsOrNames, fields)
+	if err != nil {
+		return false, err
+	}
+
+	// Build set of widget annotation indirect refs to flatten.
+	widgetRefs := map[types.IndirectRef]bool{}
+	for _, indRef := range indRefs {
+		d, err := xRefTable.DereferenceDict(indRef)
+		if err != nil {
+			return false, err
+		}
+		o, ok := d.Find("Kids")
+		if !ok {
+			widgetRefs[indRef] = true
+			continue
+		}
+		kids, err := xRefTable.DereferenceArray(o)
+		if err != nil {
+			return false, err
+		}
+		for _, kid := range kids {
+			if ir, ok := kid.(types.IndirectRef); ok {
+				widgetRefs[ir] = true
+			}
+		}
+	}
+
+	var ok bool
+
+	// For each page, find widget annotations and bake their appearance into content.
+	for i := 1; i <= xRefTable.PageCount; i++ {
+		pageDict, _, _, err := xRefTable.PageDict(i, false)
+		if err != nil {
+			return false, err
+		}
+
+		annotsObj, found := pageDict.Find("Annots")
+		if !found {
+			continue
+		}
+
+		annots, err := xRefTable.DereferenceArray(annotsObj)
+		if err != nil {
+			return false, err
+		}
+
+		var remaining types.Array
+		for _, annotObj := range annots {
+			ir, isRef := annotObj.(types.IndirectRef)
+			if !isRef || !widgetRefs[ir] {
+				remaining = append(remaining, annotObj)
+				continue
+			}
+
+			d, err := xRefTable.DereferenceDict(ir)
+			if err != nil {
+				return false, err
+			}
+
+			if err := flattenWidgetAnnotation(ctx, pageDict, d); err != nil {
+				return false, err
+			}
+
+			if err := xRefTable.DeleteObject(ir); err != nil {
+				return false, err
+			}
+			delete(widgetRefs, ir)
+			ok = true
+		}
+
+		if len(remaining) == 0 {
+			pageDict.Delete("Annots")
+		} else {
+			pageDict.Update("Annots", remaining)
+		}
+	}
+
+	// Remove flattened fields from AcroForm.
+	indRefsClone := make([]types.IndirectRef, len(indRefs))
+	copy(indRefsClone, indRefs)
+	if err := removeFormFields(xRefTable, &indRefsClone, &fields); err != nil {
+		return false, err
+	}
+
+	if len(fields) == 0 {
+		ctx.RootDict.Delete("AcroForm")
+	} else {
+		xRefTable.Form["Fields"] = fields
 	}
 
 	return ok, nil

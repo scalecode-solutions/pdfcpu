@@ -17,6 +17,7 @@
 package pdfcpu
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -419,6 +420,70 @@ func ListAnnotations(annots map[int]model.PgAnnots) (int, []string, error) {
 	}
 
 	return j, append([]string{fmt.Sprintf("%d annotations available", j)}, ss...), nil
+}
+
+// AnnotJSON represents a single annotation in JSON format.
+type AnnotJSON struct {
+	ObjNr      int        `json:"objNr"`
+	Type       string     `json:"type"`
+	CustomType string     `json:"customType,omitempty"`
+	ID         string     `json:"id,omitempty"`
+	Rect       [4]float64 `json:"rect"`
+	Content    string     `json:"content,omitempty"`
+}
+
+// PageAnnotsJSON represents annotations on a page.
+type PageAnnotsJSON struct {
+	Page        int         `json:"page"`
+	Annotations []AnnotJSON `json:"annotations"`
+}
+
+// ListAnnotationsJSON returns annotations as JSON bytes.
+func ListAnnotationsJSON(annots map[int]model.PgAnnots) ([]byte, error) {
+	var pageNrs []int
+	for k := range annots {
+		pageNrs = append(pageNrs, k)
+	}
+	sort.Ints(pageNrs)
+
+	var pages []PageAnnotsJSON
+	for _, pageNr := range pageNrs {
+		pageAnnots := annots[pageNr]
+		pa := PageAnnotsJSON{Page: pageNr}
+
+		var annTypes []string
+		for t := range pageAnnots {
+			annTypes = append(annTypes, model.AnnotTypeStrings[t])
+		}
+		sort.Strings(annTypes)
+
+		for _, annType := range annTypes {
+			ann := pageAnnots[model.AnnotTypes[annType]]
+			var objNrs []int
+			for objNr := range ann.Map {
+				objNrs = append(objNrs, objNr)
+			}
+			sort.Ints(objNrs)
+
+			for _, objNr := range objNrs {
+				a := ann.Map[objNr]
+				aj := AnnotJSON{
+					ObjNr:      objNr,
+					Type:       annType,
+					CustomType: a.CustomTypeString(),
+					ID:         a.ID(),
+					Content:    a.ContentString(),
+				}
+				// Parse rect from string "(llx, lly, urx, ury)"
+				rs := a.RectString()
+				fmt.Sscanf(rs, "(%f, %f, %f, %f)", &aj.Rect[0], &aj.Rect[1], &aj.Rect[2], &aj.Rect[3])
+				pa.Annotations = append(pa.Annotations, aj)
+			}
+		}
+		pages = append(pages, pa)
+	}
+
+	return json.MarshalIndent(pages, "", "  ")
 }
 
 func addAnnotationToDirectObj(

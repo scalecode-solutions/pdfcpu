@@ -1,15 +1,11 @@
-github.com/clipperhouse/stringish v0.1.1 h1:+NSqMOr3GR6k1FdRhhnXrLfztGzuG+VuFDfatpWHKCs=
-github.com/clipperhouse/stringish v0.1.1/go.mod h1:v/WhFtE1q0ovMta2+m+UbpZ+2/HEXNWYXQgCt4hdOzA=
-github.com/clipperhouse/uax29/v2 v2.4.0 h1:RXqE/l5EiAbA4u97giimKNlmpvkmz+GrBVTelsoXy9g=
-github.com/clipperhouse/uax29/v2 v2.4.0/go.mod h1:Wn1g7MK6OoeDT0vL+Q0SQLDz/KpfsVRgg6W7ihQeh4g=
 github.com/hhrutter/lzw v1.0.0 h1:laL89Llp86W3rRs83LvKbwYRx6INE8gDn0XNb1oXtm0=
 github.com/hhrutter/lzw v1.0.0/go.mod h1:2HC6DJSn/n6iAZfgM3Pg+cP1KxeWc3ezG8bBqW5+WEo=
 github.com/hhrutter/pkcs7 v0.2.0 h1:i4HN2XMbGQpZRnKBLsUwO3dSckzgX142TNqY/KfXg+I=
 github.com/hhrutter/pkcs7 v0.2.0/go.mod h1:aEzKz0+ZAlz7YaEMY47jDHL14hVWD6iXt0AgqgAvWgE=
 github.com/hhrutter/tiff v1.0.2 h1:7H3FQQpKu/i5WaSChoD1nnJbGx4MxU5TlNqqpxw55z8=
 github.com/hhrutter/tiff v1.0.2/go.mod h1:pcOeuK5loFUE7Y/WnzGw20YxUdnqjY1P0Jlcieb/cCw=
-github.com/mattn/go-runewidth v0.0.19 h1:v++JhqYnZuu5jSKrk9RbgF5v4CGUjqRfBm05byFGLdw=
-github.com/mattn/go-runewidth v0.0.19/go.mod h1:XBkDxAl56ILZc9knddidhrOlY5R/pDhgLpndooCuJAs=
+github.com/scalecode-solutions/runeseg v1.0.4 h1:gl0GPi797+WYs3bXUXBuCHrcCX34zuhCzjo8ehk990I=
+github.com/scalecode-solutions/runeseg v1.0.4/go.mod h1:ukaeRAnf3adx0B0qjLbjsu9Wxwd+VexzPU0kAKl3lPY=
 golang.org/x/crypto v0.47.0 h1:V6e3FRj+n4dbpw86FJ8Fv7XVOql7TEwpHapKoMJ/GO8=
 golang.org/x/crypto v0.47.0/go.mod h1:ff3Y9VzzKbwSSEzWqJsJVBnWmRwRSHt/6Op5n9bQc4A=
 golang.org/x/image v0.35.0 h1:LKjiHdgMtO8z7Fh18nGY6KDcoEtVfsgLDPeLyguqb7I=

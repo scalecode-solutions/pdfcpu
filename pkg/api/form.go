@@ -198,6 +198,73 @@ func LockFormFieldsFile(inFile, outFile string, fieldIDsOrNames []string, conf *
 	return LockFormFields(f1, f2, fieldIDsOrNames, conf)
 }
 
+// FlattenFormFields renders form field appearances into page content and removes form fields.
+func FlattenFormFields(rs io.ReadSeeker, w io.Writer, fieldIDsOrNames []string, conf *model.Configuration) error {
+	if rs == nil {
+		return errors.New("pdfcpu: FlattenFormFields: missing rs")
+	}
+
+	if conf == nil {
+		conf = model.NewDefaultConfiguration()
+	}
+	conf.Cmd = model.FLATTENFORMFIELDS
+
+	ctx, err := ReadValidateAndOptimize(rs, conf)
+	if err != nil {
+		return err
+	}
+
+	ok, err := form.FlattenFormFields(ctx, fieldIDsOrNames)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrNoFormFieldsAffected
+	}
+
+	return Write(ctx, w, conf)
+}
+
+// FlattenFormFieldsFile renders form field appearances into page content and writes the result to outFile.
+func FlattenFormFieldsFile(inFile, outFile string, fieldIDsOrNames []string, conf *model.Configuration) (err error) {
+	var f1, f2 *os.File
+
+	if f1, err = os.Open(inFile); err != nil {
+		return err
+	}
+
+	tmpFile := inFile + ".tmp"
+	if outFile != "" && inFile != outFile {
+		tmpFile = outFile
+	}
+	logWritingTo(outFile)
+
+	if f2, err = os.Create(tmpFile); err != nil {
+		f1.Close()
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			f2.Close()
+			f1.Close()
+			os.Remove(tmpFile)
+			return
+		}
+		if err = f2.Close(); err != nil {
+			return
+		}
+		if err = f1.Close(); err != nil {
+			return
+		}
+		if outFile == "" || inFile == outFile {
+			err = os.Rename(tmpFile, inFile)
+		}
+	}()
+
+	return FlattenFormFields(f1, f2, fieldIDsOrNames, conf)
+}
+
 // UnlockFormFields makess form fields in rs writeable and writes the result to w.
 func UnlockFormFields(rs io.ReadSeeker, w io.Writer, fieldIDsOrNames []string, conf *model.Configuration) error {
 	if rs == nil {

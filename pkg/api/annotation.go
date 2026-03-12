@@ -50,6 +50,26 @@ func Annotations(rs io.ReadSeeker, selectedPages []string, conf *model.Configura
 	return pdfcpu.AnnotationsForSelectedPages(ctx, pages), nil
 }
 
+// AnnotationsJSON returns page annotations of rs for selected pages as JSON bytes.
+func AnnotationsJSON(rs io.ReadSeeker, selectedPages []string, conf *model.Configuration) ([]byte, error) {
+	annots, err := Annotations(rs, selectedPages, conf)
+	if err != nil {
+		return nil, err
+	}
+	return pdfcpu.ListAnnotationsJSON(annots)
+}
+
+// AnnotationsJSONFile returns inFile's page annotations for selected pages as JSON bytes.
+func AnnotationsJSONFile(inFile string, selectedPages []string, conf *model.Configuration) ([]byte, error) {
+	f, err := os.Open(inFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	return AnnotationsJSON(f, selectedPages, conf)
+}
+
 // AddAnnotations adds annotations for selected pages in rs and writes the result to w.
 func AddAnnotations(rs io.ReadSeeker, w io.Writer, selectedPages []string, ann model.AnnotationRenderer, conf *model.Configuration) error {
 	if rs == nil {
