@@ -80,6 +80,16 @@ func PropertiesRemove(ctx *model.Context, properties []string) (bool, error) {
 			delete(d, types.EncodeName(k))
 		}
 		ctx.Properties = map[string]string{}
+
+		// Also remove XMP Metadata stream from catalog.
+		rootDict, err := ctx.Catalog()
+		if err != nil {
+			return true, err
+		}
+		if rootDict != nil {
+			delete(rootDict, "Metadata")
+		}
+
 		return true, nil
 	}
 

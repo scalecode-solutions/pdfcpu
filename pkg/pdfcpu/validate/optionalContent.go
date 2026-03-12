@@ -17,9 +17,11 @@ limitations under the License.
 package validate
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
-	"github.com/pkg/errors"
 )
 
 func validateOptionalContentGroupIntent(xRefTable *model.XRefTable, d types.Dict, dictName, entryName string, required bool, sinceVersion model.Version) error {
@@ -39,7 +41,7 @@ func validateOptionalContentGroupIntent(xRefTable *model.XRefTable, d types.Dict
 
 	case types.Name:
 		if !validate(o.Value()) {
-			return errors.Errorf("validateOptionalContentGroupIntent: invalid intent: %s", o.Value())
+			return fmt.Errorf("validateOptionalContentGroupIntent: invalid intent: %s", o.Value())
 		}
 
 	case types.Array:
@@ -52,11 +54,11 @@ func validateOptionalContentGroupIntent(xRefTable *model.XRefTable, d types.Dict
 
 			n, ok := v.(types.Name)
 			if !ok {
-				return errors.Errorf("pdfcpu: validateOptionalContentGroupIntent: invalid type at index %d\n", i)
+				return fmt.Errorf("pdfcpu: validateOptionalContentGroupIntent: invalid type at index %d\n", i)
 			}
 
 			if !validate(n.Value()) {
-				return errors.Errorf("pdfcpu: validateOptionalContentGroupIntent: invalid intent: %s", n.Value())
+				return fmt.Errorf("pdfcpu: validateOptionalContentGroupIntent: invalid intent: %s", n.Value())
 			}
 		}
 
@@ -132,8 +134,12 @@ func validateOptionalContentGroupDict(xRefTable *model.XRefTable, d types.Dict, 
 
 	dictName := "optionalContentGroupDict"
 
-	// Type, required, name, OCG
-	_, err := validateNameEntry(xRefTable, d, dictName, "Type", REQUIRED, sinceVersion, func(s string) bool { return s == "OCG" })
+	// Type, required, name, OCG (or OCMD in relaxed mode after Ghostscript processing)
+	validateType := func(s string) bool { return s == "OCG" }
+	if xRefTable.ValidationMode == model.ValidationRelaxed {
+		validateType = func(s string) bool { return s == "OCG" || s == "OCMD" }
+	}
+	_, err := validateNameEntry(xRefTable, d, dictName, "Type", REQUIRED, sinceVersion, validateType)
 	if err != nil {
 		return err
 	}
@@ -423,13 +429,20 @@ func validateOCProperties(xRefTable *model.XRefTable, rootDict types.Dict, requi
 	}
 
 	// "D" required dict, default viewing optional content configuration dict.
-	d1, err := validateDictEntry(xRefTable, d, dictName, "D", REQUIRED, sinceVersion, nil)
+	// In relaxed mode, tolerate missing /D entry (seen with Adobe Fill & Sign add-in).
+	dRequired := REQUIRED
+	if xRefTable.ValidationMode == model.ValidationRelaxed {
+		dRequired = OPTIONAL
+	}
+	d1, err := validateDictEntry(xRefTable, d, dictName, "D", dRequired, sinceVersion, nil)
 	if err != nil {
 		return err
 	}
-	err = validateOptionalContentConfigurationDict(xRefTable, d1, sinceVersion)
-	if err != nil {
-		return err
+	if d1 != nil {
+		err = validateOptionalContentConfigurationDict(xRefTable, d1, sinceVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	// "Configs" optional array of alternate optional content configuration dicts.

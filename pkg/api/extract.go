@@ -26,11 +26,12 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
+
 	"github.com/pdfcpu/pdfcpu/pkg/log"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
-	"github.com/pkg/errors"
 )
 
 // ExtractImagesRaw returns []pdfcpu.Image containing io.Readers for images contained in selectedPages.
@@ -136,7 +137,10 @@ func ExtractImagesFile(inFile, outDir string, selectedPages []string, conf *mode
 
 func writeFonts(ff []pdfcpu.Font, outDir, fileName string) error {
 	for _, f := range ff {
-		outFile := filepath.Join(outDir, fmt.Sprintf("%s_%s.%s", fileName, f.Name, f.Type))
+		// Sanitize font name from PDF to prevent path traversal.
+		safeName := filepath.Base(f.Name)
+		safeType := filepath.Base(f.Type)
+		outFile := filepath.Join(outDir, fmt.Sprintf("%s_%s.%s", fileName, safeName, safeType))
 		logWritingTo(outFile)
 		w, err := os.Create(outFile)
 		if err != nil {

@@ -21,9 +21,10 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
+
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
-	"github.com/pkg/errors"
 )
 
 // func validateSignatureDict(xRefTable *model.XRefTable, o pdf.Object) error {
@@ -357,6 +358,10 @@ func validateFormFieldDictEntries(xRefTable *model.XRefTable, objNr, incr int, d
 
 	// FT: name, Btn,Tx,Ch,Sig
 	validate := func(s string) bool { return types.MemberOf(s, []string{"Btn", "Tx", "Ch", "Sig"}) }
+	if xRefTable.ValidationMode == model.ValidationRelaxed {
+		// In relaxed mode, tolerate non-standard field types (e.g. KSI, DocTimeStamp).
+		validate = nil
+	}
 	fieldType, err := validateNameEntry(xRefTable, d, dictName, "FT", terminalNode && inFieldType == nil, model.V10, validate)
 	if err != nil {
 		return nil, false, err
@@ -827,7 +832,7 @@ func pageAnnotIndRefForAcroField(xRefTable *model.XRefTable, indRef types.Indire
 	}
 
 	return &indRef, nil
-	//return nil, errors.Errorf("pdfcpu: can't repair form field: %d\n", indRef.ObjectNumber.Value())
+	//return nil, fmt.Errorf("pdfcpu: can't repair form field: %d\n", indRef.ObjectNumber.Value())
 }
 
 func fixFormFieldsArray(xRefTable *model.XRefTable, arr types.Array) (types.Array, error) {

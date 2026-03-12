@@ -18,11 +18,11 @@ package filter
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/hhrutter/lzw"
 	"github.com/pdfcpu/pdfcpu/pkg/log"
-	"github.com/pkg/errors"
 )
 
 type lzwDecode struct {
@@ -69,7 +69,7 @@ func (f lzwDecode) DecodeLength(r io.Reader, maxLen int64) (io.Reader, error) {
 
 	p, found := f.parms["Predictor"]
 	if found && p > 1 {
-		return nil, errors.Errorf("DecodeLZW: unsupported predictor %d", p)
+		return nil, fmt.Errorf("DecodeLZW: unsupported predictor %d", p)
 	}
 
 	ec, ok := f.parms["EarlyChange"]
@@ -84,7 +84,7 @@ func (f lzwDecode) DecodeLength(r io.Reader, maxLen int64) (io.Reader, error) {
 	var written int64
 	var err error
 	if maxLen < 0 {
-		written, err = io.Copy(&b, rc)
+		written, err = io.Copy(&b, io.LimitReader(rc, MaxDecompressedSize))
 	} else {
 		written, err = io.CopyN(&b, rc, maxLen)
 	}

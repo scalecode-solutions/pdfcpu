@@ -19,11 +19,17 @@ package filter
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
+	"errors"
+
 	"github.com/pdfcpu/pdfcpu/pkg/log"
-	"github.com/pkg/errors"
 )
+
+// MaxDecompressedSize is the maximum allowed size of decompressed data (256 MB).
+// This prevents decompression bombs where a small compressed stream expands to gigabytes.
+var MaxDecompressedSize int64 = 256 << 20
 
 // PDF defines the following filters. See also 7.4 in the PDF spec.
 const (
@@ -88,7 +94,7 @@ func NewFilter(filterName string, parms map[string]int) (filter Filter, err erro
 		err = ErrUnsupportedFilter
 
 	default:
-		err = errors.Errorf("Invalid filter: <%s>", filterName)
+		err = fmt.Errorf("Invalid filter: <%s>", filterName)
 	}
 
 	return filter, err
@@ -114,7 +120,7 @@ func getReaderBytes(r io.Reader) ([]byte, error) {
 		bb = buf.Bytes()
 	} else {
 		var buf bytes.Buffer
-		if _, err := io.Copy(&buf, r); err != nil {
+		if _, err := io.Copy(&buf, io.LimitReader(r, MaxDecompressedSize)); err != nil {
 			return nil, err
 		}
 

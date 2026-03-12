@@ -24,10 +24,11 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
+
 	"github.com/pdfcpu/pdfcpu/pkg/log"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
-	"github.com/pkg/errors"
 )
 
 type PageSpan struct {
@@ -175,7 +176,12 @@ func writePageSpansSplitAlongBookmarks(ctx *model.Context, outDir string) error 
 	}
 
 	for _, bm := range bms {
-		fileName := strings.Replace(bm.Title, " ", "_", -1)
+		// Sanitize bookmark title from PDF to prevent path traversal.
+		safeTitle := filepath.Base(strings.Replace(bm.Title, " ", "_", -1))
+		if safeTitle == "." || safeTitle == ".." {
+			safeTitle = "bookmark"
+		}
+		fileName := safeTitle
 		from, thru := bm.PageFrom, bm.PageThru
 		if thru == 0 {
 			thru = ctx.PageCount

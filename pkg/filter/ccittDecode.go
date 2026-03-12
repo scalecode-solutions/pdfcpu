@@ -20,8 +20,9 @@ import (
 	"bytes"
 	"io"
 
+	"errors"
+
 	"github.com/pdfcpu/pdfcpu/pkg/log"
-	"github.com/pkg/errors"
 	"golang.org/x/image/ccitt"
 )
 
@@ -88,7 +89,7 @@ func (f ccittDecode) DecodeLength(r io.Reader, maxLen int64) (io.Reader, error) 
 	rd := ccitt.NewReader(r, ccitt.MSB, mode, cols, rows, opts)
 
 	var b bytes.Buffer
-	written, err := io.Copy(&b, rd)
+	written, err := io.Copy(&b, io.LimitReader(rd, MaxDecompressedSize))
 	if err != nil {
 		return nil, err
 	}

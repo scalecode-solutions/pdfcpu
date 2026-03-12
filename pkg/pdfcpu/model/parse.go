@@ -23,7 +23,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/pdfcpu/pdfcpu/pkg/log"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
@@ -47,9 +47,30 @@ var (
 	errXrefStreamCorruptIndex  = errors.New("pdfcpu: parse: xref stream dict corrupt entry Index")
 	errObjStreamMissingN       = errors.New("pdfcpu: parse: obj stream dict missing entry W")
 	errObjStreamMissingFirst   = errors.New("pdfcpu: parse: obj stream dict missing entry First")
+	errMaxRecursionDepth       = errors.New("pdfcpu: parse: maximum recursion depth exceeded")
 
 	ErrCorruptObjectOffset = errors.New("pdfcpu: corrupt object offset")
 )
+
+// MaxParseDepth is the maximum nesting depth for arrays/dicts before the parser bails out.
+const MaxParseDepth = 100
+
+type parseDepthKey struct{}
+
+func parseDepthFromContext(c context.Context) int {
+	if v, ok := c.Value(parseDepthKey{}).(int); ok {
+		return v
+	}
+	return 0
+}
+
+func withIncrementedDepth(c context.Context) (context.Context, error) {
+	d := parseDepthFromContext(c) + 1
+	if d > MaxParseDepth {
+		return c, errMaxRecursionDepth
+	}
+	return context.WithValue(c, parseDepthKey{}, d), nil
+}
 
 func positionToNextWhitespace(s string) (int, string) {
 	for i, c := range s {
@@ -326,6 +347,12 @@ func parseArray(c context.Context, line *string) (*types.Array, error) {
 	if log.ParseEnabled() {
 		log.Parse.Println("ParseObject: value = Array")
 	}
+
+	c, err := withIncrementedDepth(c)
+	if err != nil {
+		return nil, err
+	}
+
 	if line == nil || len(*line) == 0 {
 		return nil, errNoArray
 	}
@@ -640,6 +667,11 @@ func processDictKeys(c context.Context, line *string, relaxed bool) (types.Dict,
 func parseDict(c context.Context, line *string, relaxed bool) (types.Dict, error) {
 	if line == nil || len(*line) == 0 {
 		return nil, errNoDictionary
+	}
+
+	c, err := withIncrementedDepth(c)
+	if err != nil {
+		return nil, err
 	}
 
 	l := *line
@@ -1093,6 +1125,10 @@ func ParseXRefStreamDict(sd *types.StreamDict) (*types.XRefStreamDict, error) {
 			count, ok := indArr[i*2+1].(types.Integer)
 			if !ok {
 				return nil, errXrefStreamCorruptIndex
+			}
+
+			if count.Value() < 0 || count.Value() > 10_000_000 {
+				return nil, fmt.Errorf("pdfcpu: xref stream index count %d exceeds maximum", count.Value())
 			}
 
 			for j := 0; j < count.Value(); j++ {

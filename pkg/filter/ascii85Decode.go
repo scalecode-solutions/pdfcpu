@@ -21,7 +21,7 @@ import (
 	"encoding/ascii85"
 	"io"
 
-	"github.com/pkg/errors"
+	"errors"
 )
 
 type ascii85Decode struct {
@@ -75,7 +75,7 @@ func (f ascii85Decode) DecodeLength(r io.Reader, maxLen int64) (io.Reader, error
 
 	var b2 bytes.Buffer
 	if maxLen < 0 {
-		if _, err := io.Copy(&b2, decoder); err != nil {
+		if _, err := io.Copy(&b2, io.LimitReader(decoder, MaxDecompressedSize)); err != nil {
 			return nil, err
 		}
 	} else {
