@@ -362,7 +362,12 @@ func validateFormFieldDictEntries(xRefTable *model.XRefTable, objNr, incr int, d
 		// In relaxed mode, tolerate non-standard field types (e.g. KSI, DocTimeStamp).
 		validate = nil
 	}
-	fieldType, err := validateNameEntry(xRefTable, d, dictName, "FT", terminalNode && inFieldType == nil, model.V10, validate)
+	ftRequired := terminalNode && inFieldType == nil
+	if xRefTable.ValidationMode == model.ValidationRelaxed {
+		// In relaxed mode, tolerate missing FT — some PDFs inherit it via Parent.
+		ftRequired = false
+	}
+	fieldType, err := validateNameEntry(xRefTable, d, dictName, "FT", ftRequired, model.V10, validate)
 	if err != nil {
 		return nil, false, err
 	}

@@ -140,7 +140,7 @@ func (l LazyObjectStreamObject) Clone() Object {
 func (l LazyObjectStreamObject) PDFString() string {
 	data, err := l.GetData()
 	if err != nil {
-		panic(err)
+		return fmt.Sprintf("<error: %v>", err)
 	}
 
 	return string(data)

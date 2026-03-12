@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type configuration struct {

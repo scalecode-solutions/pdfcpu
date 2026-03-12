@@ -69,9 +69,17 @@ func PDFVersion(versionStr string) (Version, error) {
 }
 
 func PDFVersionRelaxed(versionStr string) (Version, error) {
+	// Try exact match first.
 	switch versionStr {
 	case "1.7.0":
 		return V17, nil
+	}
+	// Fall back to major.minor prefix for 3-part versions like "1.7.8".
+	if parts := strings.SplitN(versionStr, ".", 3); len(parts) == 3 {
+		v, err := PDFVersion(parts[0] + "." + parts[1])
+		if err == nil {
+			return v, nil
+		}
 	}
 	return -1, errors.New(versionStr)
 }

@@ -1744,11 +1744,22 @@ func decryptAESBytes(b, key []byte) ([]byte, error) {
 	mode := cipher.NewCBCDecrypter(cb, iv)
 	mode.CryptBlocks(data, data)
 
-	// Remove padding.
+	// Remove PKCS#7 padding.
 	// Note: For some reason not all AES ciphertexts are padded.
-	if len(data) > 0 && data[len(data)-1] <= 0x10 {
-		e := len(data) - int(data[len(data)-1])
-		data = data[:e]
+	if len(data) > 0 {
+		padLen := int(data[len(data)-1])
+		if padLen >= 1 && padLen <= aes.BlockSize && padLen <= len(data) {
+			validPadding := true
+			for i := len(data) - padLen; i < len(data); i++ {
+				if data[i] != byte(padLen) {
+					validPadding = false
+					break
+				}
+			}
+			if validPadding {
+				data = data[:len(data)-padLen]
+			}
+		}
 	}
 
 	return data, nil

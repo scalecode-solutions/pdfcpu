@@ -41,6 +41,10 @@ import (
 	_ "golang.org/x/image/webp"
 )
 
+// MaxImageDimension is the maximum allowed width or height for imported images.
+// This prevents excessive memory allocation from crafted image dimensions.
+var MaxImageDimension = 65536
+
 // Image is a Reader representing an image resource.
 type Image struct {
 	io.Reader
@@ -197,6 +201,16 @@ func CreateDCTImageStreamDict(xRefTable *XRefTable, buf []byte, w, h, bpc int, c
 	sd.FilterPipeline = []types.PDFFilter{{Name: filter.DCT, DecodeParms: nil}}
 
 	return sd, nil
+}
+
+func validateImageDimension(w, h int) error {
+	if w <= 0 || h <= 0 {
+		return fmt.Errorf("pdfcpu: invalid image dimensions %dx%d", w, h)
+	}
+	if w > MaxImageDimension || h > MaxImageDimension {
+		return fmt.Errorf("pdfcpu: image dimensions %dx%d exceed maximum %d", w, h, MaxImageDimension)
+	}
+	return nil
 }
 
 func writeRGBAImageBuf(img image.Image) ([]byte, []byte) {
@@ -663,6 +677,12 @@ func handleCMYKImage(img *image.CMYK) ([]byte, []byte, int, string, error) {
 }
 
 func createImageBuf(xRefTable *XRefTable, img image.Image, imgA image.Image, format string) ([]byte, []byte, int, string, error) {
+	w := img.Bounds().Dx()
+	h := img.Bounds().Dy()
+	if err := validateImageDimension(w, h); err != nil {
+		return nil, nil, 0, "", err
+	}
+
 	if format == "jpeg" {
 		bb, cs, err := encodeJPEG(img)
 		return bb, nil, 8, cs, err

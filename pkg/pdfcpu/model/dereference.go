@@ -347,12 +347,14 @@ func (xRefTable *XRefTable) DereferenceDict(o types.Object) (types.Dict, error) 
 		return nil, err
 	}
 
-	d, ok := o.(types.Dict)
-	if !ok {
+	switch v := o.(type) {
+	case types.Dict:
+		return v, nil
+	case types.StreamDict:
+		return v.Dict, nil
+	default:
 		return nil, fmt.Errorf("pdfcpu: dereferenceDict: wrong type %T <%v>", o, o)
 	}
-
-	return d, nil
 }
 
 // DereferenceDictWithIncr resolves and validates a dictionary object, which may be an indirect reference.
@@ -365,12 +367,14 @@ func (xRefTable *XRefTable) DereferenceDictWithIncr(o types.Object) (types.Dict,
 		return nil, 0, err
 	}
 
-	d, ok := o.(types.Dict)
-	if !ok {
+	switch v := o.(type) {
+	case types.Dict:
+		return v, incr, nil
+	case types.StreamDict:
+		return v.Dict, incr, nil
+	default:
 		return nil, 0, fmt.Errorf("pdfcpu: dereferenceDictWithIncr: wrong type %T <%v>", o, o)
 	}
-
-	return d, incr, nil
 }
 
 // DereferenceFontDict returns the font dict referenced by indRef.

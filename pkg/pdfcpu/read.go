@@ -455,6 +455,9 @@ func parseObjectStream(c context.Context, osd *types.ObjectStreamDict) error {
 			return err
 		}
 	}
+	if osd.FirstObjOffset > len(decodedContent) {
+		return errors.New("pdfcpu: parseObjectStream: FirstObjOffset exceeds decoded content length")
+	}
 	prolog := decodedContent[:osd.FirstObjOffset]
 
 	// Remove inline comment.
@@ -2419,6 +2422,9 @@ func ensureStreamLength(sd *types.StreamDict, fixLength bool) {
 	l := int64(len(sd.Raw))
 	if fixLength || sd.StreamLength == nil || l != *sd.StreamLength {
 		sd.StreamLength = &l
+		if sd.Dict == nil {
+			sd.Dict = types.Dict{}
+		}
 		sd.Dict["Length"] = types.Integer(l)
 	}
 }

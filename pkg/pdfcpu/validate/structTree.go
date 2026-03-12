@@ -94,6 +94,9 @@ func validateObjectReferenceDict(xRefTable *model.XRefTable, d types.Dict) error
 	}
 
 	if obj == nil {
+		if xRefTable.ValidationMode == model.ValidationRelaxed {
+			return nil
+		}
 		return fmt.Errorf("pdfcpu: validateObjectReferenceDict: missing obj#%s", ir.ObjectNumber)
 	}
 

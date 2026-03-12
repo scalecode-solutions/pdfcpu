@@ -609,7 +609,12 @@ func validateNameTreeDictNamesEntry(xRefTable *model.XRefTable, d types.Dict, na
 
 	// arr length needs to be even because of contained key value pairs.
 	if len(a)%2 == 1 {
-		return "", "", fmt.Errorf("pdfcpu: validateNameTreeDictNamesEntry: Names array entry length needs to be even, length=%d\n", len(a))
+		if xRefTable.ValidationMode == model.ValidationRelaxed {
+			// Truncate to last even index and continue.
+			a = a[:len(a)-1]
+		} else {
+			return "", "", fmt.Errorf("pdfcpu: validateNameTreeDictNamesEntry: Names array entry length needs to be even, length=%d\n", len(a))
+		}
 	}
 
 	var key, firstKey, lastKey string
