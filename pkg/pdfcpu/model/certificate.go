@@ -30,6 +30,11 @@ var CertDir string
 // UserCertPool contains all certificates loaded from CertDir.
 var UserCertPool *x509.CertPool
 
+// UserCerts holds the same certificates as UserCertPool in a slice for iteration.
+// x509.CertPool.Subjects() is deprecated since Go 1.18; this slice provides
+// direct access to the parsed certificates.
+var UserCerts []*x509.Certificate
+
 // TODO Do we need locking?
 //var UserCertPoolLock = &sync.RWMutex{}
 

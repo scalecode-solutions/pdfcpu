@@ -17,7 +17,6 @@ limitations under the License.
 package sign
 
 import (
-	"crypto/dsa"
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
@@ -303,10 +302,8 @@ func publicKeySize(cert *x509.Certificate) (int, error) {
 		return pubKey.Curve.Params().BitSize, nil
 	case ed25519.PublicKey:
 		return 256, nil
-	case *dsa.PublicKey:
-		return pubKey.Y.BitLen(), nil
 	default:
-		return 0, fmt.Errorf("unknown public key type %T", pubKey)
+		return 0, fmt.Errorf("unsupported public key type %T", pubKey)
 	}
 }
 

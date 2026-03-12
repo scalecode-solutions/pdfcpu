@@ -38,18 +38,19 @@ var ErrUnknownFileType = errors.New("pdfcpu: unsupported file type")
 var loadCertsOnce sync.Once
 var loadCertsErr error
 
-func doAddCertificatesToCertPool(path string, certPool *x509.CertPool, n *int) error {
-	certs, err := LoadCertificatesFile(path)
+func doAddCertificatesToCertPool(path string, certPool *x509.CertPool, certs *[]*x509.Certificate, n *int) error {
+	cc, err := LoadCertificatesFile(path)
 	if err != nil {
 		if err == ErrUnknownFileType {
 			return nil
 		}
 		return err
 	}
-	for _, cert := range certs {
+	for _, cert := range cc {
 		certPool.AddCert(cert)
 	}
-	*n += len(certs)
+	*certs = append(*certs, cc...)
+	*n += len(cc)
 	return nil
 }
 
@@ -57,6 +58,7 @@ func addCertificatesToCertPool() error {
 	// fmt.Println("*** loading certificates ***")
 	dir := model.CertDir
 	certPool := x509.NewCertPool()
+	var certs []*x509.Certificate
 	n := 0
 	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -65,9 +67,10 @@ func addCertificatesToCertPool() error {
 		if d.IsDir() {
 			return nil
 		}
-		return doAddCertificatesToCertPool(path, certPool, &n)
+		return doAddCertificatesToCertPool(path, certPool, &certs, &n)
 	})
 	model.UserCertPool = certPool
+	model.UserCerts = certs
 	return err
 }
 

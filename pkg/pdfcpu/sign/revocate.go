@@ -481,24 +481,12 @@ func findOCSPResponderCert(resp *ocsp.Response, rootCerts *x509.CertPool) (*x509
 	if resp.Certificate != nil {
 		return resp.Certificate, nil
 	}
-	for _, rawCert := range rootCerts.Subjects() { //nolint:staticcheck // deprecated but no replacement available
-		cert, err := safeParseX509(rawCert)
-		if err == nil && bytes.Equal(cert.SubjectKeyId, resp.ResponderKeyHash) {
+	for _, cert := range model.UserCerts {
+		if bytes.Equal(cert.SubjectKeyId, resp.ResponderKeyHash) {
 			return cert, nil
 		}
 	}
 	return nil, errors.New("OCSP: responder certificate unavailable")
-}
-
-// safeParseX509 wraps x509.ParseCertificate to recover from panics
-// caused by malformed certificate extensions (e.g. invalid SAN rfc822Name).
-func safeParseX509(raw []byte) (cert *x509.Certificate, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("x509: certificate parse panic: %v", r)
-		}
-	}()
-	return x509.ParseCertificate(raw)
 }
 
 func hasNoCheckExtension(cert *x509.Certificate) bool {
@@ -511,10 +499,9 @@ func hasNoCheckExtension(cert *x509.Certificate) bool {
 }
 
 func getIssuerCertificate(cert *x509.Certificate, pool *x509.CertPool, client *http.Client) (*x509.Certificate, error) {
-	// Try to find the issuer in the provided CertPool
-	for _, potentialIssuer := range pool.Subjects() {
-		candidate, err := x509.ParseCertificate(potentialIssuer)
-		if err == nil && cert.CheckSignatureFrom(candidate) == nil {
+	// Try to find the issuer in the loaded certificates
+	for _, candidate := range model.UserCerts {
+		if cert.CheckSignatureFrom(candidate) == nil {
 			return candidate, nil // Found the issuer
 		}
 	}
