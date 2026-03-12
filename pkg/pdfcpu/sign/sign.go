@@ -177,10 +177,19 @@ func signedData(ra io.ReaderAt, sigDict types.Dict) ([]byte, error) {
 }
 
 func bytesForByteRange(ra io.ReaderAt, arr types.Array) ([]byte, error) {
+	const maxByteRangeSize = 256 << 20 // 256 MB
+
 	off1 := int64((arr[0].(types.Integer)).Value())
 	size1 := int64((arr[1].(types.Integer)).Value())
 	off2 := int64((arr[2].(types.Integer)).Value())
 	size2 := int64((arr[3].(types.Integer)).Value())
+
+	if size1 < 0 || size1 > maxByteRangeSize || size2 < 0 || size2 > maxByteRangeSize {
+		return nil, fmt.Errorf("pdfcpu: ByteRange size out of bounds: %d, %d", size1, size2)
+	}
+	if off1 < 0 || off2 < 0 {
+		return nil, fmt.Errorf("pdfcpu: ByteRange offset negative: %d, %d", off1, off2)
+	}
 
 	buf1 := make([]byte, size1)
 	_, err := ra.ReadAt(buf1, off1)

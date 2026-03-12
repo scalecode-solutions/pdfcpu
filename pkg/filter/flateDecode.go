@@ -251,8 +251,8 @@ func (f flate) parameters() (colors, bpc, columns int, err error) {
 	colors, found := f.parms["Colors"]
 	if !found {
 		colors = 1
-	} else if colors == 0 {
-		return 0, 0, 0, fmt.Errorf("pdfcpu: filter FlateDecode: \"Colors\" must be > 0")
+	} else if colors <= 0 || colors > 32 {
+		return 0, 0, 0, fmt.Errorf("pdfcpu: filter FlateDecode: \"Colors\" out of range: %d", colors)
 	}
 
 	// BitsPerComponent, int
@@ -271,6 +271,8 @@ func (f flate) parameters() (colors, bpc, columns int, err error) {
 	columns, found = f.parms["Columns"]
 	if !found {
 		columns = 1
+	} else if columns <= 0 || columns > 100_000_000 {
+		return 0, 0, 0, fmt.Errorf("pdfcpu: filter FlateDecode: \"Columns\" out of range: %d", columns)
 	}
 
 	return colors, bpc, columns, nil

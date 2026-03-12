@@ -387,8 +387,14 @@ func (t table) parseHorizontalMetricsTable(fd *ttf) error {
 }
 
 func (t table) parseCMapFormat4(fd *ttf) error {
+	if len(t.data) < 14 {
+		return fmt.Errorf("pdfcpu: parseCMapFormat4: table too small")
+	}
 	fd.Planes[0] = true
 	segCount := int(t.uint16(6) / 2)
+	if segCount <= 0 || segCount > 10_000_000 {
+		return fmt.Errorf("pdfcpu: parseCMapFormat4: invalid segCount: %d", segCount)
+	}
 	endOff := 14
 	startOff := endOff + 2*segCount + 2
 	deltaOff := startOff + 2*segCount
@@ -428,6 +434,13 @@ func (t table) parseCMapFormat4(fd *ttf) error {
 
 func (t table) parseCMapFormat12(fd *ttf) error {
 	numGroups := int(t.uint32(12))
+	if numGroups < 0 || numGroups > 10_000_000 {
+		return fmt.Errorf("pdfcpu: parseCMapFormat12: invalid numGroups: %d", numGroups)
+	}
+	requiredSize := 16 + numGroups*12
+	if requiredSize > len(t.data) {
+		return fmt.Errorf("pdfcpu: parseCMapFormat12: table too small for %d groups", numGroups)
+	}
 	off := 16
 	count := 0
 	var (
@@ -592,7 +605,7 @@ func headerAndTables(fn string, r io.ReaderAt, baseOff int64) ([]byte, map[strin
 	return header, tables, nil
 }
 
-func parse(tags map[string]*table, tag string, fd *ttf) error {
+func parse(tags map[string]*table, tag string, fd *ttf) (retErr error) {
 	t, found := tags[tag]
 	if !found {
 		// OS/2 is optional for True Type fonts.
@@ -604,6 +617,13 @@ func parse(tags map[string]*table, tag string, fd *ttf) error {
 	if t.data == nil {
 		return fmt.Errorf("pdfcpu: tag: %s no data", tag)
 	}
+
+	// Recover from OOB panics caused by malformed font table data.
+	defer func() {
+		if r := recover(); r != nil {
+			retErr = fmt.Errorf("pdfcpu: malformed font table %q: %v", tag, r)
+		}
+	}()
 
 	var err error
 

@@ -393,7 +393,11 @@ func (sd *StreamDict) decodeLength(maxLen int64) ([]byte, error) {
 		return data, nil
 	}
 
-	return data[:maxLen], nil
+	n := int(maxLen)
+	if n > len(data) {
+		n = len(data)
+	}
+	return data[:n], nil
 }
 
 func (sd *StreamDict) DecodeLength(maxLen int64) ([]byte, error) {
@@ -403,7 +407,11 @@ func (sd *StreamDict) DecodeLength(maxLen int64) ([]byte, error) {
 			return sd.Content, nil
 		}
 
-		return sd.Content[:maxLen], nil
+		n := int(maxLen)
+		if n > len(sd.Content) {
+			n = len(sd.Content)
+		}
+		return sd.Content[:n], nil
 	}
 
 	fpl := sd.FilterPipeline
@@ -416,7 +424,11 @@ func (sd *StreamDict) DecodeLength(maxLen int64) ([]byte, error) {
 			return sd.Content, nil
 		}
 
-		return sd.Content[:maxLen], nil
+		n := int(maxLen)
+		if n > len(sd.Content) {
+			n = len(sd.Content)
+		}
+		return sd.Content[:n], nil
 	}
 
 	//fmt.Printf("decodedStream before:\n%s\n", hex.Dump(sd.Raw))

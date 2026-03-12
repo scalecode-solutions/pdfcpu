@@ -1824,6 +1824,10 @@ func buffer(c context.Context, rd io.Reader) (buf []byte, endInd int, streamInd 
 			return nil, 0, 0, 0, err
 		}
 
+		if len(buf) > maxStreamLength {
+			return nil, 0, 0, 0, fmt.Errorf("pdfcpu: object buffer exceeded %d byte limit", maxStreamLength)
+		}
+
 		growSize = min(growSize*2, maximumBufSize)
 		line := string(buf)
 
@@ -2353,6 +2357,9 @@ func readStreamContentBlindly(rd io.Reader) (buf []byte, err error) {
 			buf, err = growBufBy(buf, growSize, rd)
 			if err != nil {
 				return nil, err
+			}
+			if len(buf) > maxStreamLength {
+				return nil, fmt.Errorf("pdfcpu: blind stream read exceeded %d byte limit", maxStreamLength)
 			}
 		}
 	}
@@ -2942,7 +2949,7 @@ func dereferenceObjectsSorted(c context.Context, ctx *model.Context) error {
 
 	for _, objNr := range keys {
 		entry := xRefTable.Table[objNr]
-		if entry.Free || entry.Compressed {
+		if entry == nil || entry.Free || entry.Compressed {
 			continue
 		}
 		if err := c.Err(); err != nil {
@@ -2967,7 +2974,7 @@ func dereferenceObjectsRaw(c context.Context, ctx *model.Context) error {
 
 	for objNr := range xRefTable.Table {
 		entry := xRefTable.Table[objNr]
-		if entry.Free || entry.Compressed {
+		if entry == nil || entry.Free || entry.Compressed {
 			continue
 		}
 		if err := c.Err(); err != nil {
@@ -3199,8 +3206,8 @@ func checkForEncryption(c context.Context, ctx *model.Context) error {
 		return errors.New("pdfcpu: this file is already encrypted")
 	}
 
-	if ctx.Cmd == model.VALIDATESIGNATURES || ctx.Cmd == model.ADDSIGNATURE {
-		return errors.New("pdfcpu: this file is encrypted")
+	if ctx.Cmd == model.ADDSIGNATURE {
+		return errors.New("pdfcpu: cannot add signature to encrypted file")
 	}
 
 	// Dereference encryptDict.
